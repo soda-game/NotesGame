@@ -10,11 +10,13 @@ public class MidiManager : MonoBehaviour
     [SerializeField] Text text;
     [SerializeField] AudioSource audioSource;
     [SerializeField] GameObject notes;
-    [SerializeField] string filePath;
+    [SerializeField] string filePath; //フォーマット0にしてください***
 
     bool isPlay = false;
     float startTime = 0;
     int now_noteNum = 0; //リストのインデックス番号 for使いたくなかったので
+    const int FOUR_TICK = 480; //四分音符***ヘッダを参照
+    [SerializeField] float BASE_SCALE; //４分音符の大きさ //***ノーツの速さ/4とすると丁度いいので算出した方がいいかも
 
     void Start()
     {
@@ -35,23 +37,43 @@ public class MidiManager : MonoBehaviour
             now_noteNum = 0;
         }
         //曲が再生されてない
-        if (audioSource.time == 0.0f && !audioSource.isPlaying )
+        if (audioSource.time == 0.0f && !audioSource.isPlaying)
         {
             text.text = "Spaceキーで再生";
             isPlay = false;
             return;
         }
 
-        if (now_noteNum >= MidiSystem.noteDataList.Count) return;
 
         //経過時間からリストを参照
+        if (now_noteNum >= MidiSystem.noteDataList.Count) return;
         if (MidiSystem.noteDataList[now_noteNum].msTime / 1000 <= Time.time - startTime)
         {
-            if (MidiSystem.noteDataList[now_noteNum].type == MidiSystem.NoteType.ON)
+            //ピアノロールっぽく
+            var onNote = MidiSystem.noteDataList[now_noteNum];
+            if (onNote.type == MidiSystem.NoteType.ON)
             {
-                int leanPos = (int)((MidiSystem.noteDataList[now_noteNum].leanNum - 60)); //レーン番号をピアノロールっぽく使う
-                Instantiate(notes, new Vector3(transform.position.x + leanPos, transform.position.y, 0), Quaternion.identity);
+                //--長さを決める--
+                float scale = 0;
+                //offを探す Libに入れた方がいいかも？***
+                for (int i = now_noteNum + 1; i < MidiSystem.noteDataList.Count; i++)
+                {
+                    var offNote = MidiSystem.noteDataList[i];
+                    if (onNote.leanNum == offNote.leanNum && onNote.ch == offNote.ch && offNote.type == MidiSystem.NoteType.OFF)
+                    {
+                        //計算
+                        float diff = (offNote.tickTime - onNote.tickTime);
+                        scale = (diff / FOUR_TICK) * BASE_SCALE; //四分音符をBASEとする
+                        break;
+                    }
+                }
+
+                //生成
+                int leanPos = (int)onNote.leanNum - 60;
+                var noteInst = Instantiate(notes, new Vector3(transform.position.x + leanPos, transform.position.y + scale / 2, 0), Quaternion.identity);
+                noteInst.gameObject.transform.localScale = new Vector3(transform.localScale.x, scale, transform.localScale.z);
             }
+
             now_noteNum++;
         }
 

@@ -30,6 +30,6 @@ public class PlayerView : MonoBehaviour
         if (Input.GetKey(KeyCode.S))
             ver.y = -1;
 
-        this.gameObject.transform.position += ver.normalized * speed;
+        this.gameObject.transform.position += ver.normalized * speed*Time.deltaTime;
     }
 }
