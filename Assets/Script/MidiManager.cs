@@ -7,6 +7,8 @@ using MidiLib;
 public class MidiManager : MonoBehaviour
 {
     // Start is called before the first frame update7
+    const float H = 2;
+
     [SerializeField] Text text;
     [SerializeField] AudioSource audioSource;
     [SerializeField] GameObject notes;
@@ -16,12 +18,16 @@ public class MidiManager : MonoBehaviour
     float startTime = 0;
     int now_noteNum = 0; //リストのインデックス番号 for使いたくなかったので
     const int FOUR_TICK = 480; //四分音符***ヘッダを参照
-    [SerializeField] float BASE_SCALE; //４分音符の大きさ //***ノーツの速さ/4とすると丁度いいので算出した方がいいかも
+    [SerializeField] float BASE_SCALE; //４分音符の大きさ //***多分速さに比例するんだろうけど分からん
+
+    Color[] colors = { Color.blue, Color.red, new Color(1, 0.3897537f, 0, 1),Color.green, Color.green, Color.white }; //６ch以上はむ属性
+    [SerializeField] float alpha;
 
     void Start()
     {
         MidiSystem.ReadMidi(filePath);
         text.text = "Spaceキーで再生";
+        for (int i = 0; i < colors.Length; i++) colors[i].a = alpha;
     }
 
     // Update is called once per frame
@@ -70,8 +76,13 @@ public class MidiManager : MonoBehaviour
 
                 //生成
                 int leanPos = (int)onNote.leanNum - 60;
-                var noteInst = Instantiate(notes, new Vector3(transform.position.x + leanPos, transform.position.y + scale / 2, 0), Quaternion.identity);
+                var noteInst = Instantiate(notes, new Vector3(transform.position.x + leanPos, transform.position.y + scale / H, 0), Quaternion.identity);
                 noteInst.gameObject.transform.localScale = new Vector3(transform.localScale.x, scale, transform.localScale.z);
+
+                if (onNote.ch >= colors.Length)
+                    noteInst.GetComponent<SpriteRenderer>().color = colors[0];
+                else
+                    noteInst.GetComponent<SpriteRenderer>().color = colors[onNote.ch];
             }
 
             now_noteNum++;

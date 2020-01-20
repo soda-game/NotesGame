@@ -154,7 +154,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -179, y: -162.2}
+  m_AnchoredPosition: {x: -199, y: -182}
   m_SizeDelta: {x: 384.5, y: 59}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &57789454
@@ -180,7 +180,7 @@ MonoBehaviour:
     m_FontSize: 50
     m_FontStyle: 0
     m_BestFit: 0
-    m_MinSize: 5
+    m_MinSize: 0
     m_MaxSize: 50
     m_Alignment: 0
     m_AlignByGeometry: 0
@@ -233,7 +233,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.3726415, g: 0.6166142, b: 1, a: 0}
+  m_BackGroundColor: {r: 0.3018868, g: 0.3018868, b: 0.3018868, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -414,8 +414,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -179.00003, y: -213}
-  m_SizeDelta: {x: 384.5, y: 59}
+  m_AnchoredPosition: {x: -7.000004, y: -238.8}
+  m_SizeDelta: {x: 716.1, y: 59}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &390659671
 MonoBehaviour:
@@ -437,10 +437,10 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 50
+    m_FontSize: 35
     m_FontStyle: 0
     m_BestFit: 0
-    m_MinSize: 5
+    m_MinSize: 0
     m_MaxSize: 50
     m_Alignment: 0
     m_AlignByGeometry: 0
@@ -448,7 +448,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "AWSD\u3067\u79FB\u52D5"
+  m_Text: "AWSD\u3067\u79FB\u52D5(\u3057\u3066\u3082\u7279\u306B\u610F\u5473\u306F\u306A\u3044)"
 --- !u!222 &390659672
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -483,7 +483,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1061253636}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -6.7, y: 11.5, z: -33.727345}
+  m_LocalPosition: {x: -6.7, y: 10, z: -33.727345}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -602,6 +602,7 @@ MonoBehaviour:
   notes: {fileID: 3659122168730003879, guid: a776a4c023acd774aac59b8d17b041a3, type: 3}
   filePath: ./Assets/Resource/format0_delvge.mid
   BASE_SCALE: 2
+  alpha: 0.8
 --- !u!1 &1162464430
 GameObject:
   m_ObjectHideFlags: 0
