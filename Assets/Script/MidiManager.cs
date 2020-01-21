@@ -20,7 +20,7 @@ public class MidiManager : MonoBehaviour
     const int FOUR_TICK = 480; //四分音符***ヘッダを参照
     [SerializeField] float BASE_SCALE; //４分音符の大きさ //***多分速さに比例するんだろうけど分からん
 
-    Color[] colors = { Color.blue, Color.red, new Color(1, 0.3897537f, 0, 1),Color.green, Color.green, Color.white }; //６ch以上はむ属性
+    Color[] colors = { Color.blue, Color.red, new Color(1, 0.3897537f, 0, 1), Color.green, Color.green, Color.white }; //６ch以上はむ属性
     [SerializeField] float alpha;
 
     void Start()
@@ -59,7 +59,7 @@ public class MidiManager : MonoBehaviour
             var onNote = MidiSystem.noteDataList[now_noteNum];
             if (onNote.type == MidiSystem.NoteType.ON)
             {
-                //--長さを決める--
+                //長さを決める
                 float scale = 0;
                 //offを探す Libに入れた方がいいかも？***
                 for (int i = now_noteNum + 1; i < MidiSystem.noteDataList.Count; i++)
@@ -74,9 +74,13 @@ public class MidiManager : MonoBehaviour
                     }
                 }
 
-                //生成
+                //出現位置を求める
                 int leanPos = (int)onNote.leanNum - 60;
-                var noteInst = Instantiate(notes, new Vector3(transform.position.x + leanPos, transform.position.y + scale / H, 0), Quaternion.identity);
+                float noteSpeed = notes.GetComponent<NotesView>().Speed;
+                float noteY = (onNote.msTime / 1000 - (Time.time - startTime)) * noteSpeed; //動作が遅くなってもちゃんと出現するように
+
+                //--生成--
+                var noteInst = Instantiate(notes, new Vector3(transform.position.x + leanPos, transform.position.y + noteY + scale / H, transform.position.z), Quaternion.identity); ;
                 noteInst.gameObject.transform.localScale = new Vector3(transform.localScale.x, scale, transform.localScale.z);
 
                 if (onNote.ch >= colors.Length)

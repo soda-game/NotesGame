@@ -6,6 +6,7 @@ public class NotesView : MonoBehaviour
 {
     readonly Vector3 ver = new Vector2(0, -1);
     [SerializeField] float speed;
+    public float Speed => speed;
 
     // Start is called before the first frame update
     void Start()
