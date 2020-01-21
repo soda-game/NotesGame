@@ -20,14 +20,13 @@ public class MidiManager : MonoBehaviour
     const int FOUR_TICK = 480; //四分音符***ヘッダを参照
     [SerializeField] float BASE_SCALE; //４分音符の大きさ //***多分速さに比例するんだろうけど分からん
 
-    Color[] colors = { Color.blue, Color.red, new Color(1, 0.3897537f, 0, 1), Color.green, Color.green, Color.white }; //６ch以上はむ属性
+   [SerializeField]Material[] colors =new Material[5]; //６ch以上はむ属性
     [SerializeField] float alpha;
 
     void Start()
     {
         MidiSystem.ReadMidi(filePath);
         text.text = "Spaceキーで再生";
-        for (int i = 0; i < colors.Length; i++) colors[i].a = alpha;
     }
 
     // Update is called once per frame
@@ -84,9 +83,9 @@ public class MidiManager : MonoBehaviour
                 noteInst.gameObject.transform.localScale = new Vector3(transform.localScale.x, scale, transform.localScale.z);
 
                 if (onNote.ch >= colors.Length)
-                    noteInst.GetComponent<SpriteRenderer>().color = colors[0];
+                    noteInst.GetComponent<Renderer>().material = colors[colors.Length - 1];
                 else
-                    noteInst.GetComponent<SpriteRenderer>().color = colors[onNote.ch];
+                    noteInst.GetComponent<Renderer>().material = colors[onNote.ch];
             }
 
             now_noteNum++;
