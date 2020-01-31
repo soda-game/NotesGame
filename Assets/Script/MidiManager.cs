@@ -14,18 +14,21 @@ public class MidiManager : MonoBehaviour
     [SerializeField] GameObject notes;
     [SerializeField] string filePath; //フォーマット0にしてください***
 
+    string midiPath => Application.streamingAssetsPath + filePath;
+
     bool isPlay = false;
     float startTime = 0;
     int now_noteNum = 0; //リストのインデックス番号 for使いたくなかったので
-    const int FOUR_TICK = 480; //四分音符***ヘッダを参照
-    [SerializeField] float BASE_SCALE; //４分音符の大きさ //***多分速さに比例するんだろうけど分からん
+    int timeBase = 0; //四分音符 ヘッダを参照
+    [SerializeField] float BASE_SCALE; //４分音符の大きさ
 
-   [SerializeField]Material[] colors =new Material[5]; //６ch以上はむ属性
+    [SerializeField] Material[] colors = new Material[5]; //６ch以上は無属性
     [SerializeField] float alpha;
 
     void Start()
     {
-        MidiSystem.ReadMidi(filePath);
+        MidiSystem.ReadMidi(midiPath);
+        timeBase = MidiSystem.headerData.timeBase;
         text.text = "Spaceキーで再生";
     }
 
@@ -68,7 +71,7 @@ public class MidiManager : MonoBehaviour
                     {
                         //計算
                         float diff = (offNote.tickTime - onNote.tickTime);
-                        scale = (diff / FOUR_TICK) * BASE_SCALE; //四分音符をBASEとする
+                        scale = (diff / timeBase) * BASE_SCALE; //四分音符をBASEとする
                         break;
                     }
                 }
