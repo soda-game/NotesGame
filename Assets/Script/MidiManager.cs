@@ -22,8 +22,7 @@ public class MidiManager : MonoBehaviour
     int timeBase = 0; //四分音符 ヘッダを参照
     [SerializeField] float BASE_SCALE; //４分音符の大きさ
 
-    [SerializeField] Material[] colors = new Material[5]; //６ch以上は無属性
-    [SerializeField] float alpha;
+    Color[] colors = new Color[] { Color.blue, Color.red, Color.yellow, new Color(1, 0.52f, 0, 1)/*オレンジ*/, Color.green, Color.white }; //６ch以上は無属性
 
     void Start()
     {
@@ -55,7 +54,7 @@ public class MidiManager : MonoBehaviour
 
         //経過時間からリストを参照
         if (now_noteNum >= MidiSystem.noteDataList.Count) return;
-        if (MidiSystem.noteDataList[now_noteNum].msTime / 1000 <= Time.time - startTime)
+        if (MidiSystem.noteDataList[now_noteNum].msTime / 1000 <= Time.time - startTime+1) //速くに出現するように***
         {
             //ピアノロールっぽく
             var onNote = MidiSystem.noteDataList[now_noteNum];
@@ -79,16 +78,16 @@ public class MidiManager : MonoBehaviour
                 //出現位置を求める
                 int leanPos = (int)onNote.leanNum - 60;
                 float noteSpeed = notes.GetComponent<NotesView>().Speed;
-                float noteY = (onNote.msTime / 1000 - (Time.time - startTime)) * noteSpeed; //動作が遅くなってもちゃんと出現するように
+                float noteY = (onNote.msTime / 1000 - (Time.time - startTime+1)) * noteSpeed; //動作が遅くなってもちゃんと出現するように
 
                 //--生成--
                 var noteInst = Instantiate(notes, new Vector3(transform.position.x + leanPos, transform.position.y + noteY + scale / H, transform.position.z), Quaternion.identity); ;
                 noteInst.gameObject.transform.localScale = new Vector3(transform.localScale.x, scale, transform.localScale.z);
 
                 if (onNote.ch >= colors.Length)
-                    noteInst.GetComponent<Renderer>().material = colors[colors.Length - 1];
+                    noteInst.GetComponent<SpriteRenderer>().color = colors[colors.Length - 1];
                 else
-                    noteInst.GetComponent<Renderer>().material = colors[onNote.ch];
+                    noteInst.GetComponent<SpriteRenderer>().color = colors[onNote.ch];
             }
 
             now_noteNum++;

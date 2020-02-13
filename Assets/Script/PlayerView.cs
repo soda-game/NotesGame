@@ -25,7 +25,7 @@ public class PlayerView : MonoBehaviour
         ver.x = Input.GetAxis("Horizontal") * speed;
         ver.y = Input.GetAxis("Vertical") * speed;
 
-        this.gameObject.transform.Translate(ver.x, ver.y, 0f);
+        this.gameObject.transform.position += ver.normalized * speed * Time.deltaTime;
     }
 
     void Dash()
