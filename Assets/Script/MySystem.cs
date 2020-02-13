@@ -7,7 +7,7 @@ public class MySystem : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Screen.SetResolution(600, 400, false, 60);
+        Screen.SetResolution(600, 400, false, 60); //ビルド時のscreenサイズ固定
     }
 
     // Update is called once per frame
