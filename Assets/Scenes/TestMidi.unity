@@ -173,7 +173,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 10.330691
+  orthographic size: 10
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -329,7 +329,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1061253636}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -6.7, y: 25, z: 0}
+  m_LocalPosition: {x: -6.7, y: 10, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -447,7 +447,7 @@ MonoBehaviour:
   audioSource: {fileID: 1061253638}
   notes: {fileID: 3659122168730003879, guid: a776a4c023acd774aac59b8d17b041a3, type: 3}
   filePath: /format0_delvge.mid
-  BASE_SCALE: 4
+  BASE_SCALE: 5
 --- !u!1 &1162464430
 GameObject:
   m_ObjectHideFlags: 0

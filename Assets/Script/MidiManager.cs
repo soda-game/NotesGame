@@ -8,6 +8,8 @@ public class MidiManager : MonoBehaviour
 {
     // Start is called before the first frame update7
     const float H = 2;
+    const int FAST_SECOND = 1; //速くに出現するように
+    float thisObj_initY = 0; //出現位置の初期の値（カメラの上部）***
 
     [SerializeField] Text text;
     [SerializeField] AudioSource audioSource;
@@ -19,16 +21,15 @@ public class MidiManager : MonoBehaviour
     bool isPlay = false;
     float startTime = 0;
     int now_noteNum = 0; //リストのインデックス番号 for使いたくなかったので
-    int timeBase = 0; //四分音符 ヘッダを参照
-    [SerializeField] float BASE_SCALE; //４分音符の大きさ
+    [SerializeField] int BASE_SCALE = 10; //４分音符の大きさ
 
-    Color[] colors = new Color[] { Color.blue, Color.red, Color.yellow, new Color(1, 0.52f, 0, 1)/*オレンジ*/, Color.green, Color.white }; //６ch以上は無属性
+    Color[] colors = new Color[] { Color.blue, Color.red, Color.yellow, new Color(1, 0.52f, 0, 1)/*オレンジ*/, Color.green, Color.white };
 
     void Start()
     {
-        MidiSystem.ReadMidi(midiPath);
-        timeBase = MidiSystem.headerData.timeBase;
+        MidiSystem.ReadMidi(midiPath, BASE_SCALE);
         text.text = "Spaceキーで再生";
+        thisObj_initY = transform.position.y;
     }
 
     // Update is called once per frame
@@ -52,46 +53,29 @@ public class MidiManager : MonoBehaviour
         }
 
 
-        //経過時間からリストを参照
-        if (now_noteNum >= MidiSystem.noteDataList.Count) return;
-        if (MidiSystem.noteDataList[now_noteNum].msTime / 1000 <= Time.time - startTime+1) //速くに出現するように***
-        {
-            //ピアノロールっぽく
-            var onNote = MidiSystem.noteDataList[now_noteNum];
-            if (onNote.type == MidiSystem.NoteType.ON)
-            {
-                //長さを決める
-                float scale = 0;
-                //offを探す Libに入れた方がいいかも？***
-                for (int i = now_noteNum + 1; i < MidiSystem.noteDataList.Count; i++)
-                {
-                    var offNote = MidiSystem.noteDataList[i];
-                    if (onNote.leanNum == offNote.leanNum && onNote.ch == offNote.ch && offNote.type == MidiSystem.NoteType.OFF)
-                    {
-                        //計算
-                        float diff = (offNote.tickTime - onNote.tickTime);
-                        scale = (diff / timeBase) * BASE_SCALE; //四分音符をBASEとする
-                        break;
-                    }
-                }
+        //--経過時間からリストを参照--
+        float musicTime = Time.time - startTime;
 
-                //出現位置を求める
-                int leanPos = (int)onNote.leanNum - 60;
-                float noteSpeed = notes.GetComponent<NotesView>().Speed;
-                float noteY = (onNote.msTime / 1000 - (Time.time - startTime+1)) * noteSpeed; //動作が遅くなってもちゃんと出現するように
+        //ノーツリスト
+        if (!(now_noteNum < MidiSystem.a_noteDataList.Count && MidiSystem.a_noteDataList[now_noteNum].msTime / 1000 <= musicTime + FAST_SECOND)) return;
+        var note_pick = MidiSystem.a_noteDataList[now_noteNum];
+        now_noteNum++;
 
-                //--生成--
-                var noteInst = Instantiate(notes, new Vector3(transform.position.x + leanPos, transform.position.y + noteY + scale / H, transform.position.z), Quaternion.identity); ;
-                noteInst.gameObject.transform.localScale = new Vector3(transform.localScale.x, scale, transform.localScale.z);
+        //テンポリスト
+        var temp_pick = MidiSystem.a_tempDataList.Find(n => n.msTime <= musicTime);
+        this.transform.position = new Vector3(transform.position.x, thisObj_initY + temp_pick.speed * FAST_SECOND, transform.position.z); //速さによってn秒前の場所が変わるので
 
-                if (onNote.ch >= colors.Length)
-                    noteInst.GetComponent<SpriteRenderer>().color = colors[colors.Length - 1];
-                else
-                    noteInst.GetComponent<SpriteRenderer>().color = colors[onNote.ch];
-            }
+        //--生成--
+        float noteY = (MidiSystem.a_noteDataList[now_noteNum].msTime / 1000 - (musicTime + FAST_SECOND)) * temp_pick.speed; //動作が遅くなってもちゃんと出現するように
+        var noteInst = Instantiate(notes, new Vector3(transform.position.x + note_pick.leanNum, transform.position.y + noteY + note_pick.Length / H, transform.position.z), Quaternion.identity);
 
-            now_noteNum++;
-        }
+        noteInst.gameObject.GetComponent<NotesView>().Speed = temp_pick.speed;
+        noteInst.gameObject.transform.localScale = new Vector3(transform.localScale.x, note_pick.Length, transform.localScale.z);
+
+        if (note_pick.ch >= colors.Length)  //配列以上は無色
+            noteInst.GetComponent<SpriteRenderer>().color = colors[colors.Length - 1];
+        else
+            noteInst.GetComponent<SpriteRenderer>().color = colors[note_pick.ch];
 
     }
 }
