@@ -22,12 +22,13 @@ public class MidiManager : MonoBehaviour
     float startTime = 0;
     int now_noteNum = 0; //リストのインデックス番号 for使いたくなかったので
     [SerializeField] int BASE_SCALE = 10; //４分音符の大きさ
+    [SerializeField] float magniSpead = 1f; //速度倍率
 
     Color[] colors = new Color[] { Color.blue, Color.red, Color.yellow, new Color(1, 0.52f, 0, 1)/*オレンジ*/, Color.green, Color.white };
 
     void Start()
     {
-        MidiSystem.ReadMidi(midiPath, BASE_SCALE);
+        MidiSystem.ReadMidi(midiPath, BASE_SCALE,magniSpead);
         text.text = "Spaceキーで再生";
         thisObj_initY = transform.position.y;
     }
@@ -66,8 +67,8 @@ public class MidiManager : MonoBehaviour
         this.transform.position = new Vector3(transform.position.x, thisObj_initY + temp_pick.speed * FAST_SECOND, transform.position.z); //速さによってn秒前の場所が変わるので
 
         //--生成--
-        float noteY = (MidiSystem.a_noteDataList[now_noteNum].msTime / 1000 - (musicTime + FAST_SECOND)) * temp_pick.speed; //動作が遅くなってもちゃんと出現するように
-        var noteInst = Instantiate(notes, new Vector3(transform.position.x + note_pick.leanNum, transform.position.y + noteY + note_pick.Length / H, transform.position.z), Quaternion.identity);
+        //float noteY = (MidiSystem.a_noteDataList[now_noteNum].msTime / 1000 - (musicTime + FAST_SECOND)) * temp_pick.speed; //動作が遅くなってもちゃんと出現するように
+        var noteInst = Instantiate(notes, new Vector3(transform.position.x + note_pick.leanNum, transform.position.y + /*noteY*/ + note_pick.Length / H, transform.position.z), Quaternion.identity);
 
         noteInst.gameObject.GetComponent<NotesView>().Speed = temp_pick.speed;
         noteInst.gameObject.transform.localScale = new Vector3(transform.localScale.x, note_pick.Length, transform.localScale.z);

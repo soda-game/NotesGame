@@ -64,7 +64,7 @@ namespace MidiLib
         public static List<Aftr_TempData> a_tempDataList;
 
         //main--------------------
-        public static void ReadMidi(string filePath, int _baseScale)
+        public static void ReadMidi(string filePath, int _baseScale, float magniSpeed/*速度倍率*/)
         {
             //リスト生成
             int baseScale = _baseScale; //四分音符の長さ
@@ -100,7 +100,7 @@ namespace MidiLib
             AftrNoteCreate(b_noteDataList, headerData.timeBase, baseScale);
 
             a_tempDataList = new List<Aftr_TempData>();
-            AftrTempCreate(b_tempDataList, baseScale);
+            AftrTempCreate(b_tempDataList, baseScale,magniSpeed);
 
             //以下ログ
             DataTestLog(headerData);
@@ -395,12 +395,12 @@ namespace MidiLib
                 a_noteDataList.Add(a_noteData);
             }
         }
-        static void AftrTempCreate(List<Bfr_TempData> b_tmpL, int baseScale)
+        static void AftrTempCreate(List<Bfr_TempData> b_tmpL, int baseScale, float magniSpeed)
         {
             foreach (var b_tL in b_tmpL)
             {
                 //速さ
-                float speed = b_tL.bpm / SECOND_BASE * baseScale;
+                float speed = b_tL.bpm / SECOND_BASE * baseScale * magniSpeed;
                 //リスイン
                 var a_tmpData = new Aftr_TempData { msTime = b_tL.msTime, speed = speed };
                 a_tempDataList.Add(a_tmpData);
