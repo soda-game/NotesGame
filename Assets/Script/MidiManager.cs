@@ -14,7 +14,7 @@ public class MidiManager : MonoBehaviour
     [SerializeField] Text text;
     [SerializeField] AudioSource audioSource;
     [SerializeField] GameObject notes;
-    [SerializeField] string filePath; //フォーマット0にしてください***
+    [SerializeField] string filePath;
 
     string midiPath => Application.streamingAssetsPath + filePath;
 
@@ -28,7 +28,7 @@ public class MidiManager : MonoBehaviour
 
     void Start()
     {
-        MidiSystem.ReadMidi(midiPath, BASE_SCALE,magniSpead);
+        MidiSystem.ReadMidi(midiPath, BASE_SCALE, magniSpead);
         text.text = "Spaceキーで再生";
         thisObj_initY = transform.position.y;
     }
@@ -55,20 +55,20 @@ public class MidiManager : MonoBehaviour
 
 
         //--経過時間からリストを参照--
-        float musicTime = Time.time - startTime;
+        //          なんかこの辺面倒だからlibに入れたい****
+        //ノーツリストから時間が合うノーツを取り出す
+        if (!(now_noteNum < MidiSystem.a_noteDataList.Count && MidiSystem.a_noteDataList[now_noteNum].msTime / 1000 <= Time.time - startTime + FAST_SECOND)) return; //****
+        var note_pick = MidiSystem.a_noteDataList[now_noteNum]; //***
 
-        //ノーツリスト
-        if (!(now_noteNum < MidiSystem.a_noteDataList.Count && MidiSystem.a_noteDataList[now_noteNum].msTime / 1000 <= musicTime + FAST_SECOND)) return;
-        var note_pick = MidiSystem.a_noteDataList[now_noteNum];
-        now_noteNum++;
-
-        //テンポリスト
-        var temp_pick = MidiSystem.a_tempDataList.Find(n => n.msTime <= musicTime);
-        this.transform.position = new Vector3(transform.position.x, thisObj_initY + temp_pick.speed * FAST_SECOND, transform.position.z); //速さによってn秒前の場所が変わるので
+        //テンポリストから(同上
+        var temp_pick = MidiSystem.a_tempDataList.Find(n => n.msTime <= Time.time - startTime);
+        this.transform.position = new Vector3(transform.position.x, thisObj_initY + temp_pick.speed * FAST_SECOND, transform.position.z); //速く出現する時の初期位置 速さによってn秒前の場所が変わるので
 
         //--生成--
-        //float noteY = (MidiSystem.a_noteDataList[now_noteNum].msTime / 1000 - (musicTime + FAST_SECOND)) * temp_pick.speed; //動作が遅くなってもちゃんと出現するように
-        var noteInst = Instantiate(notes, new Vector3(transform.position.x + note_pick.leanNum, transform.position.y + /*noteY*/ + note_pick.Length / H, transform.position.z), Quaternion.identity);
+        float noteY = (MidiSystem.a_noteDataList[now_noteNum].msTime / 1000 - (Time.time - startTime + FAST_SECOND)) * temp_pick.speed; //動作が遅くなってもちゃんと出現するように****
+        Debug.Log(now_noteNum + ":" + MidiSystem.a_noteDataList[now_noteNum].msTime);
+        var noteInst = Instantiate(notes, new Vector3(transform.position.x + note_pick.leanNum, transform.position.y + noteY + note_pick.Length / H, transform.position.z), Quaternion.identity);
+        noteInst.name = now_noteNum.ToString();
 
         noteInst.gameObject.GetComponent<NotesView>().Speed = temp_pick.speed;
         noteInst.gameObject.transform.localScale = new Vector3(transform.localScale.x, note_pick.Length, transform.localScale.z);
@@ -78,5 +78,6 @@ public class MidiManager : MonoBehaviour
         else
             noteInst.GetComponent<SpriteRenderer>().color = colors[note_pick.ch];
 
+        now_noteNum++;
     }
 }

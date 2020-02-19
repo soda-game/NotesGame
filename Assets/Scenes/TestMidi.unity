@@ -447,7 +447,8 @@ MonoBehaviour:
   audioSource: {fileID: 1061253638}
   notes: {fileID: 3659122168730003879, guid: a776a4c023acd774aac59b8d17b041a3, type: 3}
   filePath: /format0_delvge.mid
-  BASE_SCALE: 5
+  BASE_SCALE: 4
+  magniSpead: 1
 --- !u!1 &1162464430
 GameObject:
   m_ObjectHideFlags: 0
