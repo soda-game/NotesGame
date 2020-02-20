@@ -412,24 +412,6 @@ namespace MidiLib
             }
         }
 
-        //ノーツリストから時間が合うノーツを取り出す
-        public static Aftr_NoteData NoteDataPick(int noteNum, float time, int fastSecond)
-        {
-            if (!(noteNum < a_noteDataList.Count && a_noteDataList[noteNum].msTime / 1000 <= time + fastSecond)) return new Aftr_NoteData { msTime = NON }; 
-            return a_noteDataList[noteNum];
-        }
-        //テンポリストから(同上
-        public static Aftr_TempData TempDataPick(float time)
-        {
-            return a_tempDataList.Find(n => n.msTime <= time);
-        }
-
-        //ちゃんと出現するように差分を求める
-        public static float NotesPosition_Y(int noteNum, float time, int fastSecond, float speed, float length)
-        {
-            return (a_noteDataList[noteNum].msTime / 1000 - (time + fastSecond)) * speed + length / H;
-        }
-
         //テストログ
         static void DataTestLog(HeaderChunkData h)
         {
@@ -492,5 +474,26 @@ namespace MidiLib
                 "速さ：" + t.speed + "\n");
             }
         }
+
+        //外部参照系----------------------------------------------------------------------
+
+        //ノーツリストから時間が合うノーツを取り出す
+        public static Aftr_NoteData NoteDataPick(int noteNum, float time, int fastSecond)
+        {
+            if (!(noteNum < a_noteDataList.Count && a_noteDataList[noteNum].msTime / 1000 <= time + fastSecond)) return new Aftr_NoteData { msTime = NON };
+            return a_noteDataList[noteNum];
+        }
+        //テンポリストから(同上
+        public static Aftr_TempData TempDataPick(float time)
+        {
+            return a_tempDataList.Find(n => n.msTime <= time);
+        }
+
+        //ちゃんと出現するように差分を求める
+        public static float NotesPosition_Y(int noteNum, float time, int fastSecond, float speed, float length)
+        {
+            return (a_noteDataList[noteNum].msTime / 1000 - (time + fastSecond)) * speed + length / H;
+        }
+
     }
 }

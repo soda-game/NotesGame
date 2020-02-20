@@ -7,9 +7,10 @@ using MidiLib;
 public class MidiManager : MonoBehaviour
 {
     const int FAST_SECOND = 1; //速くに出現するように
-    float thisObj_initY = 0; //出現位置の初期の値（カメラの上部）***
+    float thisObj_initY = 0; //出現位置の初期の値（カメラの上部)
 
     [SerializeField] Text text;
+    [SerializeField] Camera camera;
     [SerializeField] AudioSource audioSource;
     [SerializeField] GameObject notes;
     [SerializeField] string filePath;
@@ -28,7 +29,7 @@ public class MidiManager : MonoBehaviour
     {
         MidiSystem.ReadMidi(midiPath, BASE_SCALE, magniSpead);
         text.text = "Spaceキーで再生";
-        thisObj_initY = ;
+        thisObj_initY = MySystem.Get_ScreenTopLeft(camera).y;
     }
 
     // Update is called once per frame
@@ -65,7 +66,7 @@ public class MidiManager : MonoBehaviour
         float noteY = MidiSystem.NotesPosition_Y(now_noteNum, Time.time - startTime, FAST_SECOND, temp_pick.speed, note_pick.Length);
 
         var noteInst = Instantiate(notes, new Vector3(transform.position.x + note_pick.leanNum, transform.position.y + noteY, transform.position.z), Quaternion.identity);
-        noteInst.gameObject.GetComponent<NotesView>().Speed = temp_pick.speed;
+        noteInst.gameObject.GetComponent<NotesView>().SetValue(temp_pick.speed, MySystem.Get_ScreenBottomRight(camera).y);
         noteInst.gameObject.transform.localScale = new Vector3(transform.localScale.x, note_pick.Length, transform.localScale.z);
 
         //色

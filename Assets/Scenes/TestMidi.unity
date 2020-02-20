@@ -444,11 +444,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   text: {fileID: 1428240870}
+  camera: {fileID: 71360762}
   audioSource: {fileID: 1061253638}
   notes: {fileID: 3659122168730003879, guid: a776a4c023acd774aac59b8d17b041a3, type: 3}
   filePath: /format0_delvge.mid
-  BASE_SCALE: 4
-  magniSpead: 1
+  BASE_SCALE: 3
+  magniSpead: 0.7
 --- !u!1 &1162464430
 GameObject:
   m_ObjectHideFlags: 0
@@ -537,7 +538,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1162464430}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.41, y: -0.5, z: -1.5004532}
+  m_LocalPosition: {x: -2.41, y: -0.5, z: 0}
   m_LocalScale: {x: 2, y: 2, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
