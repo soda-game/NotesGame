@@ -1,14 +1,18 @@
 ﻿using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MidiLib
 {
     class MidiSystem
     {
+        const float H = 2;
+        public const int NON = -1;
+
+        const int LEAN_BASE = 60; //中央ド
+        const int SECOND_BASE = 60; //中央ド
+
         //チャンクデータ
         public struct HeaderChunkData
         {
@@ -18,22 +22,19 @@ namespace MidiLib
             public short tracks; //トラック数
             public short timeBase; //分解能
         }
-        public static HeaderChunkData headerData;
-
         public struct TrackChunkData
         {
             public byte[] chunkID; //MTrk
             public int dataLength; //トラックのデータ長
             public byte[] data; //演奏データ
         }
-        public static TrackChunkData[] trackChunks;
 
-        //音げーに必要なものたち
-        public enum NoteType
+        //MIDI読み込み時のデータ
+        enum NoteType
         {
             ON, OFF
         }
-        public struct NoteData
+        struct Bfr_NoteData
         {
             public float tickTime;
             public float msTime;
@@ -41,122 +42,147 @@ namespace MidiLib
             public NoteType type;
             public int ch; //チャンネル 色分け用
         }
-        public static List<NoteData> noteDataList;
-
-        public struct TempData
+        struct Bfr_TempData
         {
             public float tickTime;
             public float msTime;
             public float bpm;
             public float tick;
         }
-        public static List<TempData> tempDataList;
+
+        //音ゲーに欲しいデータ
+        public struct Aftr_NoteData
+        {
+            public float msTime;
+            public float Length; //ノーツの長さ
+            public int leanNum; //音階
+            public int ch; //チャンネル 色分け用
+        }
+        public static List<Aftr_NoteData> a_noteDataList;
+        public struct Aftr_TempData
+        {
+            public float msTime;
+            public float speed; //ノーツの速さ
+        }
+        public static List<Aftr_TempData> a_tempDataList;
+
 
 
         //main--------------------
-        public static void ReadMidi(string filePath)
+        public static void ReadMidi(string filePath, int _baseScale, float magniSpeed/*速度倍率*/)
         {
-            headerData = new HeaderChunkData();
+            //リスト生成
+            int baseScale = _baseScale; //四分音符の長さ
 
-            noteDataList = new List<NoteData>();
-            tempDataList = new List<TempData>();
+            var headerData = new HeaderChunkData();
+            TrackChunkData[] trackChunks;
+            var b_noteDataList = new List<Bfr_NoteData>();
+            var b_tempDataList = new List<Bfr_TempData>();
 
             //ファイル読み込み 読み込み終わるまで出ない!
             using (var file = new FileStream(filePath, FileMode.Open, FileAccess.Read))
             using (var reader = new BinaryReader(file))
             {
                 //-------- ヘッダ解析 -------
-                HeaderDataAnaly(reader);
+                HeaderDataAnaly(ref headerData, reader);
 
                 //-------- トラック解析 -------
                 trackChunks = new TrackChunkData[headerData.tracks]; //ヘッダからトラック数を参照
 
                 for (int i = 0; i < trackChunks.Length; i++)  //トラック数分回す
                 {
-                    TrackDataAnaly(reader, i);
+                    TrackDataAnaly(ref trackChunks, reader, i);
 
                     //演奏データ解析へ
-                    TrackMusicAnaly(trackChunks[i].data, headerData);
+                    TrackMusicAnaly(trackChunks[i].data, headerData, ref b_noteDataList, ref b_tempDataList);
                 }
             }
 
-            MstimeFix(ref tempDataList, ref noteDataList); //曲中のBPM変更に対応
+            MstimeFix(ref b_noteDataList, ref b_tempDataList); //曲中のBPM変更に対応
 
-            HeaderTestLog(headerData);//ヘッダーテスト用
-            TrackTestLog(trackChunks); //トラックテスト用
+            //欲しいデータに変換
+            a_noteDataList = new List<Aftr_NoteData>();
+            AftrNoteCreate(b_noteDataList, headerData.timeBase, baseScale);
 
-            TempTestLog(tempDataList); //テンポ確認用
-            NoteTestLog(noteDataList); //ノーツ確認用
+            a_tempDataList = new List<Aftr_TempData>();
+            AftrTempCreate(b_tempDataList, baseScale, magniSpeed);
 
+            //以下ログ
+            DataTestLog(headerData);
+            DataTestLog(trackChunks);
+            DataTestLog(b_tempDataList);
+            DataTestLog(b_noteDataList);
+            DataTestLog(a_noteDataList);
+            DataTestLog(a_tempDataList);
         }
 
         //ヘッダー解析
-        static void HeaderDataAnaly(BinaryReader reader)
+        static void HeaderDataAnaly(ref HeaderChunkData header, BinaryReader reader)
         {
             //チャンクID
-            headerData.chunkID = reader.ReadBytes(4);
+            header.chunkID = reader.ReadBytes(4);
             //リトルエンディアンなら逆に
             if (BitConverter.IsLittleEndian)
             {
                 //データ長
                 var bytePick = reader.ReadBytes(4);
                 Array.Reverse(bytePick);
-                headerData.dataLength = BitConverter.ToInt32(bytePick, 0);
+                header.dataLength = BitConverter.ToInt32(bytePick, 0);
 
                 //フォーマット
                 bytePick = reader.ReadBytes(2);
                 Array.Reverse(bytePick);
-                headerData.format = BitConverter.ToInt16(bytePick, 0);
+                header.format = BitConverter.ToInt16(bytePick, 0);
 
                 //トラック数
                 bytePick = reader.ReadBytes(2);
                 Array.Reverse(bytePick);
-                headerData.tracks = BitConverter.ToInt16(bytePick, 0);
+                header.tracks = BitConverter.ToInt16(bytePick, 0);
 
                 //分解能
                 bytePick = reader.ReadBytes(2);
                 Array.Reverse(bytePick);
-                headerData.timeBase = BitConverter.ToInt16(bytePick, 0);
+                header.timeBase = BitConverter.ToInt16(bytePick, 0);
             }
             else
             {
                 //データ長
-                headerData.dataLength = BitConverter.ToInt32(reader.ReadBytes(4), 0);
+                header.dataLength = BitConverter.ToInt32(reader.ReadBytes(4), 0);
                 //フォーマット
-                headerData.format = BitConverter.ToInt16(reader.ReadBytes(2), 0);
+                header.format = BitConverter.ToInt16(reader.ReadBytes(2), 0);
                 //トラック数
-                headerData.tracks = BitConverter.ToInt16(reader.ReadBytes(2), 0);
+                header.tracks = BitConverter.ToInt16(reader.ReadBytes(2), 0);
                 //分解能
-                headerData.timeBase = BitConverter.ToInt16(reader.ReadBytes(2), 0);
+                header.timeBase = BitConverter.ToInt16(reader.ReadBytes(2), 0);
             }
 
         }
 
         //トラック解析 周回対応
-        static void TrackDataAnaly(BinaryReader reader, int i)
+        static void TrackDataAnaly(ref TrackChunkData[] tracks, BinaryReader reader, int i)
         {
             //チャンクID
-            trackChunks[i].chunkID = reader.ReadBytes(4);
+            tracks[i].chunkID = reader.ReadBytes(4);
 
             if (BitConverter.IsLittleEndian)
             {
                 //データ長
                 var bytePick = reader.ReadBytes(4);
                 Array.Reverse(bytePick);
-                trackChunks[i].dataLength = BitConverter.ToInt32(bytePick, 0);
+                tracks[i].dataLength = BitConverter.ToInt32(bytePick, 0);
             }
             else
             {
                 //データ長
-                trackChunks[i].dataLength = BitConverter.ToInt32(reader.ReadBytes(4), 0);
+                tracks[i].dataLength = BitConverter.ToInt32(reader.ReadBytes(4), 0);
             }
 
             //演奏データ
-            trackChunks[i].data = reader.ReadBytes(trackChunks[i].dataLength);
+            tracks[i].data = reader.ReadBytes(tracks[i].dataLength);
         }
 
         //デルタ（可変長）計算用
-        static uint deltaMath(byte[] data, ref int i)
+        static uint DeltaMath(byte[] data, ref int i)
         {
             uint delta = 0;
 
@@ -173,7 +199,8 @@ namespace MidiLib
             return delta;
         }
 
-        static void TrackMusicAnaly(byte[] data, HeaderChunkData header)
+        //トラック演奏データ解析
+        static void TrackMusicAnaly(byte[] data, HeaderChunkData header, ref List<Bfr_NoteData> b_noteL, ref List<Bfr_TempData> b_tmpL)
         {
             //トラック内で引き継ぎたいもの
             uint tickTime = 0; //開始からのTick数
@@ -184,7 +211,7 @@ namespace MidiLib
             for (int i = 0; i < data.Length;)
             {
                 //---デルタタイム---
-                tickTime += deltaMath(data, ref i);
+                tickTime += DeltaMath(data, ref i);
 
                 //---ランニングステータス---
                 if (data[i] < 0x80)
@@ -210,7 +237,7 @@ namespace MidiLib
                                 byte velocity = data[i++]; //音の強さ
 
                                 //ノート情報まとめる 
-                                NoteData noteData = new NoteData();
+                                Bfr_NoteData noteData = new Bfr_NoteData();
                                 noteData.tickTime = (int)tickTime;
                                 noteData.msTime = 0; //後でやる
                                 noteData.leanNum = (int)leanNum;
@@ -222,7 +249,7 @@ namespace MidiLib
                                 else
                                     noteData.type = NoteType.OFF;
 
-                                noteDataList.Add(noteData);
+                                b_noteL.Add(noteData);
                             }
                             break;
 
@@ -231,14 +258,14 @@ namespace MidiLib
                                 byte leanNum = data[i++];
                                 byte velocity = data[i++];
 
-                                NoteData noteData = new NoteData();
+                                Bfr_NoteData noteData = new Bfr_NoteData();
                                 noteData.tickTime = (int)tickTime;
                                 noteData.msTime = 0;
                                 noteData.leanNum = (int)leanNum;
                                 noteData.ch = statusByte & 0x0f; //下4を取得
                                 noteData.type = NoteType.OFF; //オフしか来ない
 
-                                noteDataList.Add(noteData);
+                                b_noteL.Add(noteData);
                             }
                             break;
 
@@ -272,13 +299,13 @@ namespace MidiLib
                 else if (statusByte == 0xff)
                 {
                     byte eveNum = data[i++];
-                    byte dataLen = (byte)deltaMath(data,ref i); //可変長
+                    byte dataLen = (byte)DeltaMath(data, ref i); //可変長
 
                     switch (eveNum)
                     {
                         case 0x51:
                             {
-                                TempData tempData = new TempData();
+                                Bfr_TempData tempData = new Bfr_TempData();
                                 tempData.tickTime = (int)tickTime;
                                 tempData.msTime = 0;//後でやる
 
@@ -291,12 +318,12 @@ namespace MidiLib
                                 temp |= data[i++];
 
                                 //BPM計算 = 60秒のマクロ秒/4分音符のマイクロ秒
-                                tempData.bpm = 60000000 / (float)temp;
+                                tempData.bpm = SECOND_BASE * 1000000 / (float)temp;
                                 //小数点第１位切り捨て
                                 tempData.bpm = (float)Math.Floor(tempData.bpm * 10) / 10;
                                 //tick値=60/分解能*1000
-                                tempData.tick = (60 / tempData.bpm / header.timeBase * 1000);
-                                tempDataList.Add(tempData);
+                                tempData.tick = (SECOND_BASE / tempData.bpm / header.timeBase * 1000);
+                                b_tmpL.Add(tempData);
                             }
                             break;
 
@@ -309,40 +336,84 @@ namespace MidiLib
 
         }
 
-        static void MstimeFix(ref List<TempData> tL, ref List<NoteData> nL)
+        //ms修正
+        static void MstimeFix(ref List<Bfr_NoteData> b_noteL, ref List<Bfr_TempData> b_tmpL)
         {
-            var beforTempList = new List<TempData>(tL); //変更前の値を保存
+            var beforTempList = new List<Bfr_TempData>(b_tmpL); //変更前の値を保存
 
             //--テンポのmsTime修正--
-            for (int i = 1; i < tL.Count; i++)
+            for (int i = 1; i < b_tmpL.Count; i++)
             {
-                TempData tempData = tL[i]; //現在対象のデータ
+                Bfr_TempData tempData = b_tmpL[i]; //現在対象のデータ
 
-                float timeDiff = tempData.tickTime - tL[i - 1].tickTime;
-                tempData.msTime = timeDiff * tL[i - 1].tick + tL[i - 1].msTime;
+                float timeDiff = tempData.tickTime - b_tmpL[i - 1].tickTime;
+                tempData.msTime = timeDiff * b_tmpL[i - 1].tick + b_tmpL[i - 1].msTime;
 
-                tL[i] = tempData;
+                b_tmpL[i] = tempData;
             }
 
             //--ノーツのmsTime修正--
-            for (int i = 0; i < nL.Count; i++)
+            for (int i = 0; i < b_noteL.Count; i++)
             {
-                for (int j = tL.Count - 1; j >= 0; j--)
+                for (int j = b_tmpL.Count - 1; j >= 0; j--)
                 {
-                    if (nL[i].tickTime >= tL[j].tickTime) //テンポ変更した後
+                    if (b_noteL[i].tickTime >= b_tmpL[j].tickTime) //テンポ変更した後
                     {
-                        NoteData note = nL[i];
+                        Bfr_NoteData note = b_noteL[i];
 
-                        float timeDifference = nL[i].tickTime - tL[j].tickTime;
-                        note.msTime = timeDifference * tL[j].tick + tL[j].msTime;   // 計算後のテンポ変更イベント時間+そこからの自分の時間
-                        nL[i] = note;
+                        float timeDifference = b_noteL[i].tickTime - b_tmpL[j].tickTime;
+                        note.msTime = timeDifference * b_tmpL[j].tick + b_tmpL[j].msTime;   // 計算後のテンポ変更イベント時間+そこからの自分の時間
+                        b_noteL[i] = note;
                         break;
                     }
                 }
             }
         }
 
-        static void HeaderTestLog(HeaderChunkData h)
+        //欲しいデータに変換
+        static void AftrNoteCreate(List<Bfr_NoteData> nL, int timeBase, int baseScale)
+        {
+            for (int i = 0; i < nL.Count; i++)
+            {
+                //--オンノートを探す--
+                if (nL[i].type != NoteType.ON) continue;
+                var onNote = nL[i];
+
+                //--長さを決める--
+                float length = 0;
+                for (int j = i + 1; j < nL.Count; j++)
+                {
+                    //対応するオフを探す
+                    if (!(nL[j].type == NoteType.OFF && onNote.leanNum == nL[j].leanNum && onNote.ch == nL[j].ch)) continue;
+                    var offNote = nL[j];
+                    //計算
+                    float diff = offNote.tickTime - onNote.tickTime;
+                    length = diff / timeBase * baseScale;
+                    break;
+                }
+
+                //--出現位置調整　中央ド(c3)を0とする--
+                int leanNum = onNote.leanNum - LEAN_BASE;
+
+                //--リスイン--
+                var a_noteData = new Aftr_NoteData { msTime = onNote.msTime, Length = length, leanNum = leanNum, ch = onNote.ch };
+                a_noteDataList.Add(a_noteData);
+            }
+        }
+        static void AftrTempCreate(List<Bfr_TempData> b_tmpL, int baseScale, float magniSpeed)
+        {
+            foreach (var b_tL in b_tmpL)
+            {
+                //速さ
+                float speed = b_tL.bpm / SECOND_BASE * baseScale * magniSpeed;
+                //リスイン
+                var a_tmpData = new Aftr_TempData { msTime = b_tL.msTime, speed = speed };
+                a_tempDataList.Add(a_tmpData);
+            }
+        }
+
+        //テストログ
+        static void DataTestLog(HeaderChunkData h)
         {
             Console.WriteLine(
                 "チャンクID：" + (char)h.chunkID[0] + (char)h.chunkID[1] + (char)h.chunkID[2] + (char)h.chunkID[3] + "\n" +
@@ -351,7 +422,7 @@ namespace MidiLib
                 "トラック数：" + h.tracks + "\n" +
                 "分解能：" + h.timeBase + "\n");
         }
-        static void TrackTestLog(TrackChunkData[] tArr)
+        static void DataTestLog(TrackChunkData[] tArr)
         {
             foreach (var t in tArr)  //トラック数分回す
             {
@@ -360,9 +431,9 @@ namespace MidiLib
                  "データ長：" + t.dataLength + "\n");
             }
         }
-        static void NoteTestLog(List<NoteData> nList)
+        static void DataTestLog(List<Bfr_NoteData> nList)
         {
-            foreach (NoteData n in nList)
+            foreach (Bfr_NoteData n in nList)
             {
                 Console.WriteLine(
                     "開始から:" + n.tickTime + "Tick\n" +
@@ -372,9 +443,9 @@ namespace MidiLib
                     "チャンネル:" + n.ch + "\n");
             }
         }
-        static void TempTestLog(List<TempData> tList)
+        static void DataTestLog(List<Bfr_TempData> tList)
         {
-            foreach (TempData t in tList)
+            foreach (Bfr_TempData t in tList)
             {
                 Console.WriteLine(
                 "開始から:" + t.tickTime + "Tick\n" +
@@ -383,5 +454,46 @@ namespace MidiLib
                 "１秒=:" + t.tick + "Tick\n");
             }
         }
+        static void DataTestLog(List<Aftr_NoteData> nList)
+        {
+            foreach (Aftr_NoteData n in nList)
+            {
+                Console.WriteLine(
+                    "開始から:" + n.msTime + "ms\n" +
+                    "長さ：" + n.Length + "\n" +
+                    "音階:" + n.leanNum + "\n" +
+                    "チャンネル:" + n.ch + "\n");
+            }
+        }
+        static void DataTestLog(List<Aftr_TempData> tList)
+        {
+            foreach (Aftr_TempData t in tList)
+            {
+                Console.WriteLine(
+                "開始から:" + t.msTime + "ms\n" +
+                "速さ：" + t.speed + "\n");
+            }
+        }
+
+        //外部参照系----------------------------------------------------------------------
+
+        //ノーツリストから時間が合うノーツを取り出す
+        public static Aftr_NoteData NoteDataPick(int noteNum, float time, int fastSecond)
+        {
+            if (!(noteNum < a_noteDataList.Count && a_noteDataList[noteNum].msTime / 1000 <= time + fastSecond)) return new Aftr_NoteData { msTime = NON };
+            return a_noteDataList[noteNum];
+        }
+        //テンポリストから(同上
+        public static Aftr_TempData TempDataPick(float time)
+        {
+            return a_tempDataList.Find(n => n.msTime <= time);
+        }
+
+        //ちゃんと出現するように差分を求める
+        public static float NotesPosition_Y(int noteNum, float time, int fastSecond, float speed, float length)
+        {
+            return (a_noteDataList[noteNum].msTime / 1000 - (time + fastSecond)) * speed + length / H;
+        }
+
     }
 }

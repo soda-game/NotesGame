@@ -173,7 +173,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 10.330691
+  orthographic size: 10
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -444,18 +444,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   text: {fileID: 1428240870}
+  camera: {fileID: 71360762}
   audioSource: {fileID: 1061253638}
   notes: {fileID: 3659122168730003879, guid: a776a4c023acd774aac59b8d17b041a3, type: 3}
   filePath: /format0_delvge.mid
-  BASE_SCALE: 4
-  colors:
-  - {fileID: 2100000, guid: 2a840da8ece90c84f977b9ab30c01c1c, type: 2}
-  - {fileID: 2100000, guid: f9bc0785c7c70e24c828ee2b1dd5f31e, type: 2}
-  - {fileID: 2100000, guid: caad9529559afe444832c9b75594830c, type: 2}
-  - {fileID: 2100000, guid: c3a73482c4c4bdc4ab3eeca7091d62a1, type: 2}
-  - {fileID: 2100000, guid: e99a0f6edddebfe449314df5bb4b3b37, type: 2}
-  - {fileID: 2100000, guid: 629e5aea909cf6548b9b270f1778b714, type: 2}
-  alpha: 1
+  BASE_SCALE: 3
+  magniSpead: 0.7
 --- !u!1 &1162464430
 GameObject:
   m_ObjectHideFlags: 0
@@ -486,7 +480,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a1445aec240ce140aaa84da4767e0b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 6
+  speed: 10
 --- !u!212 &1162464432
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -544,7 +538,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1162464430}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.41, y: -0.5, z: -1.5004532}
+  m_LocalPosition: {x: -2.41, y: -0.5, z: 0}
   m_LocalScale: {x: 2, y: 2, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
